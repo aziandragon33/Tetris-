@@ -136,6 +136,10 @@ def main():
         pg.display.flip()
             
     pg.quit()
+    #test
+    #some more comments
+    
+
     
 
 # this calls the 'main' function when this script is executed
