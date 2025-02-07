@@ -70,22 +70,51 @@ class RhodeIslandZ():
         self.d.rect.topleft = (self.w*2, self.w)
         
         self.moving_up = False
+        self.moving_down = False
+        self.moving_left = False
+        self.moving_right = False
     
     """Updates tetronimo based on keypress"""
     def update(self):
         if self.moving_up:
             self._mv_up()
+        elif self.moving_down:
+            self._mv_down()
+        elif self.moving_left:
+            self._mv_left()
+        elif self.moving_right:
+            self._mv_right()
     
     """Moves blocks up"""
     def _mv_up(self):
-        print("Moving Up!")
-        self.a.rect.topleft = pg.mouse.get_pos()
-        # i = 0
-        # for i in range(0, len(self.blocks)):
-        #     self.blocks[i].rect.topleft = pg.mouse.get_pos()
-            #self.blocks[i].rect.move_ip(0, 100)
-        self.moving_up = False
+        i = 0
+        for i in range(0, len(self.blocks)):
+            self.blocks[i].rect.move_ip(0, -self.w)
             
+        self.moving_up = False
+        
+    """Moves blocks down"""
+    def _mv_down(self):
+        i = 0
+        for i in range(0, len(self.blocks)):
+            self.blocks[i].rect.move_ip(0, self.w)
+        self.moving_down = False
+        
+    """Moves blocks left"""
+    def _mv_left(self):
+        i = 0
+        for i in range(0, len(self.blocks)):
+            self.blocks[i].rect.move_ip(-self.w, 0)
+        self.moving_left = False
+        
+    """Moves blocks right"""
+    def _mv_right(self):
+        i = 0
+        for i in range(0, len(self.blocks)):
+            self.blocks[i].rect.move_ip(self.w, 0)
+        self.moving_right = False
+            
+        
 
 #Lets try and get a screen with an image. Nothing fancy
 def main():
@@ -112,7 +141,8 @@ def main():
     
     # Prepare Game Objects
     r = RhodeIslandZ()
-    allsprites = pg.sprite.RenderPlain(r.a,r.b,r.c,r.d)
+    """LOOK HERE"""
+    allsprites = pg.sprite.RenderPlain(r.a,r.b,r.c,r.d)   
     clock = pg.time.Clock() 
     
     # Main Loop
@@ -126,6 +156,15 @@ def main():
             elif event.type == pg.KEYDOWN and event.key == pg.K_w:
                 r.moving_up = True
                 print("W")
+            elif event.type == pg.KEYDOWN and event.key == pg.K_s:
+                r.moving_down = True
+                print("S")
+            elif event.type == pg.KEYDOWN and event.key == pg.K_a:
+                r.moving_left = True
+                print("A")
+            elif event.type == pg.KEYDOWN and event.key == pg.K_d:
+                r.moving_right = True
+                print("D")
                  
         allsprites.update()
         r.update()
