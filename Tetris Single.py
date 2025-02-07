@@ -48,7 +48,8 @@ class Block(pg.sprite.Sprite):
     def __init__(self):
         #Call Sprite initializer
         pg.sprite.Sprite.__init__(self)  
-        self.image, self.rect = load_image("singleblock.png", -1, .25)
+        # self.image, self.rect = load_image("singleblock.png", -1, .25)
+        self.image, self.rect = load_image("testblock.png", -1, .25)
 
 
 # Rhode Island Z
@@ -73,6 +74,7 @@ class RhodeIslandZ():
         self.moving_down = False
         self.moving_left = False
         self.moving_right = False
+        self.rotate = False
     
     """Updates tetronimo based on keypress"""
     def update(self):
@@ -84,13 +86,14 @@ class RhodeIslandZ():
             self._mv_left()
         elif self.moving_right:
             self._mv_right()
+        elif self.rotate:
+            self._rotate()
     
     """Moves blocks up"""
     def _mv_up(self):
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, -self.w)
-            
         self.moving_up = False
         
     """Moves blocks down"""
@@ -113,8 +116,18 @@ class RhodeIslandZ():
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(self.w, 0)
         self.moving_right = False
-            
         
+    """Rotates block 90 degrees"""
+    def _rotate(self):
+        print("Rotate")
+        # i = 0
+        # for i in range(0, len(self.blocks)):
+        #     self.blocks[i]
+        """Bookmark"""
+        self.a.rect.topleft = (self.w, 0)
+        self.a.rect.topright = (self.w, self.w)
+        
+        self.rotate = False
 
 #Lets try and get a screen with an image. Nothing fancy
 def main():
@@ -165,6 +178,10 @@ def main():
             elif event.type == pg.KEYDOWN and event.key == pg.K_d:
                 r.moving_right = True
                 print("D")
+            elif event.type == pg.KEYDOWN and event.key == pg.K_r:
+                r.rotate = True
+                print("R")
+            
                  
         allsprites.update()
         r.update()
