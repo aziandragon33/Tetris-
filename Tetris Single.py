@@ -48,7 +48,8 @@ class Block(pg.sprite.Sprite):
     def __init__(self):
         #Call Sprite initializer
         pg.sprite.Sprite.__init__(self)  
-        self.image, self.rect = load_image("singleblock.png", -1, .25)
+        # self.image, self.rect = load_image("singleblock.png", -1, .25)
+        self.image, self.rect = load_image("testblock.png", -1, .25)
 
 
 # Rhode Island Z
@@ -62,20 +63,35 @@ class RhodeIslandZ():
         self.a, self.b, self.c, self.d = Block(), Block(), Block(), Block()
         self.blocks = [self.a, self.b, self.c, self.d]
         self.w = self.a.rect.width #int
-        self.center = [0, 0]
+        """Bookmark: self.w is size of original not scaled"""
+        self.origin = [self.w * 1.5, self.w * 1.5]
         
-        self.a.rect.topleft = (0, 0)
-        self.b.rect.topleft = (self.w, 0)
-        self.c.rect.topleft = (self.w, self.w)
-        self.d.rect.topleft = (self.w*2, self.w)
+        self.a.rect.center = (self.w*.5, self.w*1.5)
+        self.b.rect.center = (self.w*1.5, self.w*1.5)
+        self.c.rect.center = (self.w*1.5, self.w*.5)
+        self.d.rect.center = (self.w*2.5, self.w*.5)
         
         self.moving_up = False
         self.moving_down = False
         self.moving_left = False
         self.moving_right = False
+        self.rotate = False
+        
+    """Updates origin based on which direction user is moving block"""
+    def _update_origin(self):
+        if self.moving_up:
+            self.origin[1] -= self.w
+        elif self.moving_down:
+            self.origin[1] += self.w
+        elif self.moving_left:
+            self.origin[0] -= self.w
+        elif self.moving_right:
+            self.origin[0] += self.w
+        # print("Origin:", self.origin[0], self.origin[1])
     
     """Updates tetronimo based on keypress"""
     def update(self):
+        self._update_origin()
         if self.moving_up:
             self._mv_up()
         elif self.moving_down:
@@ -84,14 +100,16 @@ class RhodeIslandZ():
             self._mv_left()
         elif self.moving_right:
             self._mv_right()
+        elif self.rotate:
+            self._rotate()
     
     """Moves blocks up"""
     def _mv_up(self):
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, -self.w)
-            
         self.moving_up = False
+        # print("Center of A:", self.a.rect.center)
         
     """Moves blocks down"""
     def _mv_down(self):
@@ -99,6 +117,7 @@ class RhodeIslandZ():
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, self.w)
         self.moving_down = False
+        # print("Center of A:", self.a.rect.center)
         
     """Moves blocks left"""
     def _mv_left(self):
@@ -106,6 +125,7 @@ class RhodeIslandZ():
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(-self.w, 0)
         self.moving_left = False
+        # print("Center of A:", self.a.rect.center)
         
     """Moves blocks right"""
     def _mv_right(self):
@@ -113,8 +133,23 @@ class RhodeIslandZ():
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(self.w, 0)
         self.moving_right = False
-            
         
+    """Rotates block 90 degrees"""
+    def _rotate(self):
+        print("Rotate")
+        
+        rotate = pg.transform.rotate
+        i = 0
+        for i in range(0, len(self.blocks)):        
+            self.blocks[i].image = rotate(self.blocks[i].image, -90)
+            current = self.blocks[i].rect.center #current position
+
+            self.blocks[i].rect.center = (-current[1] + self.origin[1] + self.origin[0], current[0] - self.origin[0] + self.origin[1])
+        
+        #x2 = -y1 + py + px
+        #y2 = x1- px + py
+        
+        self.rotate = False
 
 #Lets try and get a screen with an image. Nothing fancy
 def main():
@@ -165,6 +200,10 @@ def main():
             elif event.type == pg.KEYDOWN and event.key == pg.K_d:
                 r.moving_right = True
                 print("D")
+            elif event.type == pg.KEYDOWN and event.key == pg.K_r:
+                r.rotate = True
+                print("R")
+            
                  
         allsprites.update()
         r.update()
@@ -172,6 +211,7 @@ def main():
         # Draw Everything
         screen.blit(background, (0, 0))
         allsprites.draw(screen)
+        pg.draw.circle(screen, "red", (r.origin), 20)
         pg.display.flip()
             
     pg.quit()
