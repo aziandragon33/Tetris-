@@ -63,12 +63,12 @@ class RhodeIslandZ():
         self.a, self.b, self.c, self.d = Block(), Block(), Block(), Block()
         self.blocks = [self.a, self.b, self.c, self.d]
         self.w = self.a.rect.width #int
-        self.center = [0, 0]
+        self.origin = [self.w * 1.5, self.w * 1.5]
         
-        self.a.rect.topleft = (0, 0)
-        self.b.rect.topleft = (self.w, 0)
-        self.c.rect.topleft = (self.w, self.w)
-        self.d.rect.topleft = (self.w*2, self.w)
+        self.a.rect.topleft = (0, self.w)
+        self.b.rect.topleft = (self.w, self.w)
+        self.c.rect.topleft = (self.w, 0)
+        self.d.rect.topleft = (self.w*2, 0)
         
         self.moving_up = False
         self.moving_down = False
@@ -94,6 +94,7 @@ class RhodeIslandZ():
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, -self.w)
+            self.origin[1] -= self.w
         self.moving_up = False
         
     """Moves blocks down"""
@@ -101,6 +102,7 @@ class RhodeIslandZ():
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, self.w)
+            self.origin[1] += self.w
         self.moving_down = False
         
     """Moves blocks left"""
@@ -108,6 +110,7 @@ class RhodeIslandZ():
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(-self.w, 0)
+            self.origin[0] -= self.w
         self.moving_left = False
         
     """Moves blocks right"""
@@ -115,6 +118,7 @@ class RhodeIslandZ():
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(self.w, 0)
+            self.origin[0] += self.w
         self.moving_right = False
         
     """Rotates block 90 degrees"""
@@ -123,9 +127,14 @@ class RhodeIslandZ():
         # i = 0
         # for i in range(0, len(self.blocks)):
         #     self.blocks[i]
-        """Bookmark"""
-        self.a.rect.topleft = (self.w, 0)
-        self.a.rect.topright = (self.w, self.w)
+        rotate = pg.transform.rotate
+        self.a.image = rotate(self.a.image, -90)
+        current = self.a.rect.topleft #current position
+        """Bookmark: Expand to all blocks"""
+        self.a.rect.topleft = ( -current[1] + self.origin[1] + self.origin[0], current[0] - self.origin[0] + self.origin[1])
+        
+        #x2 = -y1 + py + px
+        #y2 = x1- px + py
         
         self.rotate = False
 
