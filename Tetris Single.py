@@ -7,15 +7,14 @@ data_dir = os.path.join(main_dir, "data")
 
 """
 def load_image(name, colorkey = None, scale = 1)
-
-This function loads an image and fits a rectangle to the image based on the 
-variables given 
+    Loads a block image and creates a pg.rect to match size. Can be scaled with
+    the 'scale' variable
 
 Inputs:
-    name; name of image
-    colorkey; key of color in image that is made transparent. Default: -1 
+    name = name of image
+    colorkey = key of color in image that is made transparent. Default: -1 
     chooses pixel at (0,0) 
-    scale; scales the image size. Default: 1
+    scale = scales the image size. Default: 1
 Returns:
     (pygame image, rectangle on pygame image)
 """
@@ -36,41 +35,39 @@ def load_image(name, colorkey = None, scale = 1):
 
 
 """
+class Game()
+    Represents an instance of a Tetris game and controls game functionality
+"""
+class Game():
+    def __init__(self):
+        self.tetronimos = []
+        self.speed = 1
+        
+        
+"""
 class Block(pg.sprite.Sprite)
-This class represents a single block which will make up one of four blocks of
-each tetronimo. It is inheriting from the pygame sprite class.
-
-Attributes:
-    self.image; pygame.image 
-    self.rect; pygame.rect
+    Represents a single block which will make up one of four blocks of
+    each tetronimo. Inheriting from the pygame sprite class.
 """
 class Block(pg.sprite.Sprite):
-    def __init__(self):
-        #Call Sprite initializer
+    def __init__(self, image_name):
         pg.sprite.Sprite.__init__(self)  
-        # self.image, self.rect = load_image("singleblock.png", -1, .25)
-        self.image, self.rect = load_image("testblock.png", -1, .25)
-
-
-# Rhode Island Z
-class RhodeIslandZ():
-    """
-    Tetromino for the green shape
-    Creates 4 Block() types to create the shape and stores them in self.blocks
-    self.w is used to to scale each block's placement when the size is changed
-    """
-    def __init__(self):
-        self.a, self.b, self.c, self.d = Block(), Block(), Block(), Block()
+        self.image, self.rect = load_image(image_name, -1, .25)
+      
+        
+"""
+class Tetronimo()
+    Parent class for each tetronimo. Contains the Blocks() that make up each
+    tetronimo, movement, and rotation
+"""
+class Tetronimo():
+    def __init__(self, image_name):
+        self.a, self.b, self.c, self.d = Block(image_name), Block(image_name), Block(image_name), Block(image_name)
         self.blocks = [self.a, self.b, self.c, self.d]
+        
         self.w = self.a.rect.width #int
-        """Bookmark: self.w is size of original not scaled"""
         self.origin = [self.w * 1.5, self.w * 1.5]
-        
-        self.a.rect.center = (self.w*.5, self.w*1.5)
-        self.b.rect.center = (self.w*1.5, self.w*1.5)
-        self.c.rect.center = (self.w*1.5, self.w*.5)
-        self.d.rect.center = (self.w*2.5, self.w*.5)
-        
+                
         self.moving_up = False
         self.moving_down = False
         self.moving_left = False
@@ -109,7 +106,6 @@ class RhodeIslandZ():
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, -self.w)
         self.moving_up = False
-        # print("Center of A:", self.a.rect.center)
         
     """Moves blocks down"""
     def _mv_down(self):
@@ -117,7 +113,6 @@ class RhodeIslandZ():
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, self.w)
         self.moving_down = False
-        # print("Center of A:", self.a.rect.center)
         
     """Moves blocks left"""
     def _mv_left(self):
@@ -125,7 +120,6 @@ class RhodeIslandZ():
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(-self.w, 0)
         self.moving_left = False
-        # print("Center of A:", self.a.rect.center)
         
     """Moves blocks right"""
     def _mv_right(self):
@@ -135,9 +129,7 @@ class RhodeIslandZ():
         self.moving_right = False
         
     """Rotates block 90 degrees"""
-    def _rotate(self):
-        print("Rotate")
-        
+    def _rotate(self):     
         rotate = pg.transform.rotate
         i = 0
         for i in range(0, len(self.blocks)):        
@@ -145,38 +137,75 @@ class RhodeIslandZ():
             current = self.blocks[i].rect.center #current position
 
             self.blocks[i].rect.center = (-current[1] + self.origin[1] + self.origin[0], current[0] - self.origin[0] + self.origin[1])
-        
-        #x2 = -y1 + py + px
-        #y2 = x1- px + py
+        # math from rotation matrix from offpoint center. Move center to be new origin then rotate
+        # x2 = -y1 + py + px
+        # y2 = x1- px + py
         
         self.rotate = False
+        
+"""
+class RhodeIslandZ(Tetronimo)
+    Tetromino for the green Z shape
+"""
+class RhodeIslandZ(Tetronimo):
+    
+    def __init__(self):
+        Tetronimo.__init__(self, "green.png")
+        
+        """Not best solution"""
+        # for b in self.blocks:
+        #     b.image, b.rect = load_image("green.png", -1, .25) #MUST BE 64x64
+        
+        # self.image, self.rect = load_image("singleblock.png", -1, .25)
+        
+        self.a.rect.center = (self.w*.5, self.w*1.5)
+        self.b.rect.center = (self.w*1.5, self.w*1.5)
+        self.c.rect.center = (self.w*1.5, self.w*.5)
+        self.d.rect.center = (self.w*2.5, self.w*.5)
 
-#Lets try and get a screen with an image. Nothing fancy
 def main():
     pg.init()
     
-    #Initialize Screen
-    screen = pg.display.set_mode((1280, 900), pg.SCALED)
+    # Initialize Screen
+    screen = pg.display.set_mode((1280,900))
     
     # Make Background
     background = pg.Surface(screen.get_size())
     background = background.convert()
-    background.fill((170, 238, 187))
+    background.fill((0, 0, 0))
     
-    #Create Text on Background
+    # Create Text on Background
     if pg.font:
         font = pg.font.Font(None, 64)
         text = font.render("Tetris by Daniel", True, (10, 10, 10))
         textpos = text.get_rect(centerx=background.get_width() / 2, y=10)
         background.blit(text, textpos)
         
+    # Draw Board
+    width = screen.get_width()
+    height = screen.get_height()
+    
+    left_margin = width*.25
+    right_margin = width*.75
+    top_margin = height*.1
+    bottom_margin = height*.9
+
+
+    
+    # Border of game
+    pg.draw.lines(background, (0,255,0), True, ((left_margin, top_margin), (left_margin, bottom_margin), (right_margin, bottom_margin), (right_margin, top_margin)))
+
+    # Grid
+    # for i in range(0,11):
+    #     pg.draw.line(background, (255,255,255), (width*i/10, 0), (width*i/10, height))
+    
     # Display The Background
     screen.blit(background, (0, 0))
     pg.display.flip()
     
     # Prepare Game Objects
     r = RhodeIslandZ()
-    """LOOK HERE"""
+    """Need to add rendering for each Block per tetronimo"""
     allsprites = pg.sprite.RenderPlain(r.a,r.b,r.c,r.d)   
     clock = pg.time.Clock() 
     
@@ -186,23 +215,18 @@ def main():
         clock.tick(60)
 
         for event in pg.event.get():
-            if event.type == pg.QUIT:
+            if event.type == pg.QUIT or event.type == pg.KEYDOWN and event.key == pg.K_q:
                 going = False
-            elif event.type == pg.KEYDOWN and event.key == pg.K_w:
+            elif event.type == pg.KEYDOWN and event.key == pg.K_UP:
                 r.moving_up = True
-                print("W")
-            elif event.type == pg.KEYDOWN and event.key == pg.K_s:
+            elif event.type == pg.KEYDOWN and event.key == pg.K_DOWN:
                 r.moving_down = True
-                print("S")
-            elif event.type == pg.KEYDOWN and event.key == pg.K_a:
+            elif event.type == pg.KEYDOWN and event.key == pg.K_LEFT:
                 r.moving_left = True
-                print("A")
-            elif event.type == pg.KEYDOWN and event.key == pg.K_d:
+            elif event.type == pg.KEYDOWN and event.key == pg.K_RIGHT:
                 r.moving_right = True
-                print("D")
-            elif event.type == pg.KEYDOWN and event.key == pg.K_r:
+            elif event.type == pg.KEYDOWN and event.key == pg.K_z:
                 r.rotate = True
-                print("R")
             
                  
         allsprites.update()
@@ -211,16 +235,11 @@ def main():
         # Draw Everything
         screen.blit(background, (0, 0))
         allsprites.draw(screen)
-        pg.draw.circle(screen, "red", (r.origin), 20)
+        pg.draw.circle(screen, "red", (r.origin), 5)
         pg.display.flip()
             
-    pg.quit()
-    #test
-    #some more comments
-    #more changes!
-
+    pg.quit() 
     
 
-# this calls the 'main' function when this script is executed
 if __name__ == "__main__":
     main()
