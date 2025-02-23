@@ -52,7 +52,7 @@ class Block(pg.sprite.Sprite)
 class Block(pg.sprite.Sprite):
     def __init__(self, image_name):
         pg.sprite.Sprite.__init__(self)  
-        self.image, self.rect = load_image(image_name, -1, .25)
+        self.image, self.rect = load_image(image_name, -1, .6)
       
         
 """
@@ -66,13 +66,16 @@ class Tetronimo():
         self.blocks = [self.a, self.b, self.c, self.d]
         
         self.w = self.a.rect.width #int
-        self.origin = [self.w * 1.5, self.w * 1.5]
                 
         self.moving_up = False
         self.moving_down = False
         self.moving_left = False
         self.moving_right = False
         self.rotate = False
+        
+    """Getter for block width"""
+    def get_width(self):
+        return (self.w)
         
     """Updates origin based on which direction user is moving block"""
     def _update_origin(self):
@@ -143,31 +146,33 @@ class Tetronimo():
         
         self.rotate = False
         
+    def _removeBlock(self, block):
+        #remove block from tetronimo. Question is how to keep track of all tetronimos and pick blocks
+        return 0
+    
+    
 """
 class RhodeIslandZ(Tetronimo)
     Tetromino for the green Z shape
 """
 class RhodeIslandZ(Tetronimo):
     
-    def __init__(self):
+    def __init__(self, start = [0,0]):
         Tetronimo.__init__(self, "green.png")
         
-        """Not best solution"""
-        # for b in self.blocks:
-        #     b.image, b.rect = load_image("green.png", -1, .25) #MUST BE 64x64
+        self.a.rect.center = (self.w * .5 + start[0], self.w * 1.5 + start[1])
+        self.b.rect.center = (self.w * 1.5 + start[0], self.w * 1.5 + start[1])
+        self.c.rect.center = (self.w * 1.5 + start[0], self.w * .5 + start[1])
+        self.d.rect.center = (self.w * 2.5 + start[0], self.w * .5 + start[1])
         
-        # self.image, self.rect = load_image("singleblock.png", -1, .25)
+        self.origin = [self.w * 1.5 + start[0], self.w * 1.5 + start[1]]
         
-        self.a.rect.center = (self.w*.5, self.w*1.5)
-        self.b.rect.center = (self.w*1.5, self.w*1.5)
-        self.c.rect.center = (self.w*1.5, self.w*.5)
-        self.d.rect.center = (self.w*2.5, self.w*.5)
 
 def main():
     pg.init()
     
     # Initialize Screen
-    screen = pg.display.set_mode((1280,900))
+    screen = pg.display.set_mode((1280,700))
     
     # Make Background
     background = pg.Surface(screen.get_size())
@@ -181,19 +186,7 @@ def main():
         textpos = text.get_rect(centerx=background.get_width() / 2, y=10)
         background.blit(text, textpos)
         
-    # Draw Board
-    width = screen.get_width()
-    height = screen.get_height()
     
-    left_margin = width*.25
-    right_margin = width*.75
-    top_margin = height*.1
-    bottom_margin = height*.9
-
-
-    
-    # Border of game
-    pg.draw.lines(background, (0,255,0), True, ((left_margin, top_margin), (left_margin, bottom_margin), (right_margin, bottom_margin), (right_margin, top_margin)))
 
     # Grid
     # for i in range(0,11):
@@ -204,8 +197,27 @@ def main():
     pg.display.flip()
     
     # Prepare Game Objects
-    r = RhodeIslandZ()
+    r = RhodeIslandZ([500,0])
     """Need to add rendering for each Block per tetronimo"""
+    
+    #### Draw Board 
+    block_width = r.get_width()
+    board_width = 10 * block_width
+    board_height = 14 * block_width 
+    
+    screen_width = screen.get_width()
+    screen_height = screen.get_height()
+    
+    # Game Area x1: first x coord to draw border etc.
+    x1 = (screen_width - board_width) / 2
+    x2 = x1 + board_width
+    y1 = (screen_height - board_height) / 2
+    y2 = y1 + board_height
+    
+    # Border of game
+    pg.draw.lines(background, (0,255,0), True, ((x1,y1), (x2, y1), (x2, y2), (x1, y2)))
+    
+    # Render and Create Clock
     allsprites = pg.sprite.RenderPlain(r.a,r.b,r.c,r.d)   
     clock = pg.time.Clock() 
     
