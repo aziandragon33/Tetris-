@@ -34,14 +34,7 @@ def load_image(name, colorkey = None, scale = 1):
     return image, image.get_rect()
 
 
-"""
-class Game()
-    Represents an instance of a Tetris game and controls game functionality
-"""
-class Game():
-    def __init__(self):
-        self.tetronimos = []
-        self.speed = 1
+
         
         
 """
@@ -52,7 +45,10 @@ class Block(pg.sprite.Sprite)
 class Block(pg.sprite.Sprite):
     def __init__(self, image_name):
         pg.sprite.Sprite.__init__(self)  
-        self.image, self.rect = load_image(image_name, -1, .6)
+        self.image, self.rect = load_image(image_name, -1, .5)
+    
+    def get_coords(self):
+        return([list(self.rect.topleft), list(self.rect.topright), list(self.rect.bottomleft), list(self.rect.bottomright)])
       
         
 """
@@ -115,21 +111,18 @@ class Tetronimo():
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(0, self.w)
-        self.moving_down = False
         
     """Moves blocks left"""
     def _mv_left(self):
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(-self.w, 0)
-        self.moving_left = False
         
     """Moves blocks right"""
     def _mv_right(self):
         i = 0
         for i in range(0, len(self.blocks)):
             self.blocks[i].rect.move_ip(self.w, 0)
-        self.moving_right = False
         
     """Rotates block 90 degrees"""
     def _rotate(self):     
@@ -141,14 +134,41 @@ class Tetronimo():
 
             self.blocks[i].rect.center = (-current[1] + self.origin[1] + self.origin[0], current[0] - self.origin[0] + self.origin[1])
         # math from rotation matrix from offpoint center. Move center to be new origin then rotate
-        # x2 = -y1 + py + px
-        # y2 = x1- px + py
+        # border_r = -border_t + py + px
+        # border_b = border_l- px + py
         
         self.rotate = False
+    
+    """Border = [l,r,t,b]"""
+    def check_move(self, direction, size, border = []):
+        cords_a = self.a.get_coords()
+        cords_d = self.d.get_coords()
+        match direction:
+            case "r":
+                for i in range(0,4):
+                    if cords_a[i][0] + size > border[1] or cords_d[i][0] + size > border[1]:
+                       return False 
+                return True
+           
+            case "l":
+                for i in range(0,4):
+                    if cords_a[i][0] - size < border[0] or cords_d[i][0] - size < border[0]:
+                       return False 
+                return True
+            
+            #not bottom border but first lbock
+            case "d":
+                for i in range(0,4):
+                    if cords_a[i][1] + size > border[3] or cords_d[i][1] + size > border[3]:
+                       return False 
+                return True
+            
         
     def _removeBlock(self, block):
         #remove block from tetronimo. Question is how to keep track of all tetronimos and pick blocks
         return 0
+    
+    
     
     
 """
@@ -167,12 +187,26 @@ class RhodeIslandZ(Tetronimo):
         
         self.origin = [self.w * 1.5 + start[0], self.w * 1.5 + start[1]]
         
+        
+"""
+class Game()
+    Represents an instance of a Tetris game and controls game functionality
+"""
+class Game():
+    def __init__(self):
+        self.tetronimos = []
+        self.speed = 1
+        
+    def NewTetronimo(self, tetroid, loc = [0,0]):
+        match tetroid:
+            case RhodeIslandZ:
+                self.tetronimos.append(RhodeIslandZ(loc))
 
 def main():
     pg.init()
     
     # Initialize Screen
-    screen = pg.display.set_mode((1280,700))
+    screen = pg.display.set_mode((1280,800))
     
     # Make Background
     background = pg.Surface(screen.get_size())
@@ -182,40 +216,49 @@ def main():
     # Create Text on Background
     if pg.font:
         font = pg.font.Font(None, 64)
-        text = font.render("Tetris by Daniel", True, (10, 10, 10))
+        text = font.render("Tetris by Daniel", True, (255, 10, 10))
         textpos = text.get_rect(centerx=background.get_width() / 2, y=10)
         background.blit(text, textpos)
         
-    
-
-    # Grid
-    # for i in range(0,11):
-    #     pg.draw.line(background, (255,255,255), (width*i/10, 0), (width*i/10, height))
     
     # Display The Background
     screen.blit(background, (0, 0))
     pg.display.flip()
     
     # Prepare Game Objects
-    r = RhodeIslandZ([500,0])
+    r = RhodeIslandZ([0,0])
     """Need to add rendering for each Block per tetronimo"""
     
     #### Draw Board 
     block_width = r.get_width()
     board_width = 10 * block_width
-    board_height = 14 * block_width 
+    board_height = 20 * block_width 
     
     screen_width = screen.get_width()
     screen_height = screen.get_height()
     
-    # Game Area x1: first x coord to draw border etc.
-    x1 = (screen_width - board_width) / 2
-    x2 = x1 + board_width
-    y1 = (screen_height - board_height) / 2
-    y2 = y1 + board_height
+    # Game Area border_l: first x coord to draw border etc.
+    border_l = (screen_width - board_width) / 2 
+    border_r = border_l + board_width
+    # border_t = (screen_height - board_height) / 2 + 50
+    # border_b = border_t + board_height + 50
+    border_t = block_width * 3
+    border_b = border_t + block_width * 20
     
     # Border of game
-    pg.draw.lines(background, (0,255,0), True, ((x1,y1), (x2, y1), (x2, y2), (x1, y2)))
+    pg.draw.lines(background, (0,255,0), True, ((border_l,border_t), (border_r, border_t), (border_r, border_b), (border_l, border_b)))
+    
+    # Draw Grid
+    for i in range(0,20):
+        pg.draw.line(background, (0,255,0), (border_l ,border_t+(block_width*i)), (border_r, border_t+(block_width*i)))
+        
+    for i in range(0,10):
+        pg.draw.line(background, (0,255,0), (border_l+(block_width*i) ,border_t), (border_l+(block_width*i), border_b))
+    
+                                                                                                                                 
+    # Spawn blocks always here. Sloppy
+    r = RhodeIslandZ([border_l+(block_width*3), border_t])
+    # active_tetronimo = r
     
     # Render and Create Clock
     allsprites = pg.sprite.RenderPlain(r.a,r.b,r.c,r.d)   
@@ -224,25 +267,30 @@ def main():
     # Main Loop
     going = True
     while going:
-        clock.tick(60)
+        clock.tick(20)
 
         for event in pg.event.get():
             if event.type == pg.QUIT or event.type == pg.KEYDOWN and event.key == pg.K_q:
                 going = False
-            elif event.type == pg.KEYDOWN and event.key == pg.K_UP:
-                r.moving_up = True
-            elif event.type == pg.KEYDOWN and event.key == pg.K_DOWN:
-                r.moving_down = True
-            elif event.type == pg.KEYDOWN and event.key == pg.K_LEFT:
-                r.moving_left = True
-            elif event.type == pg.KEYDOWN and event.key == pg.K_RIGHT:
-                r.moving_right = True
+                
             elif event.type == pg.KEYDOWN and event.key == pg.K_z:
                 r.rotate = True
+                    
+        keys = pg.key.get_pressed()
+        r.moving_right = keys[pg.K_RIGHT] and r.check_move("r", block_width, [border_l,border_r,border_t,border_b])
+        r.moving_left = keys[pg.K_LEFT] and r.check_move("l", block_width, [border_l,border_r,border_t,border_b])
+        r.moving_down = keys[pg.K_DOWN] and r.check_move("d", block_width, [border_l,border_r,border_t,border_b])
+        r.moving_up = keys[pg.K_UP]
+
             
                  
         allsprites.update()
         r.update()
+        
+        r.moving_up = False
+        r.moving_down = False
+        r.moving_left = False
+        r.moving_right = False
                 
         # Draw Everything
         screen.blit(background, (0, 0))
